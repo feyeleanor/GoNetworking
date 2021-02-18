@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='UTF-8' />
+		<title>WEBSOCKET CHAT</title>
+    <script src="js"></script>
+	</head>
+
+	<body>
+		<h1>MESSAGE FEEDS #{<span id="id_banner"></span>}</h1>
+
+    <h2>Add Message</h2>
+    <form id="addMessage">
+      <div>
+        <label for="recipient">Recipient</label>
+        <input type="text" id="recipient" name="recipient">
+      </div>
+      <div>
+        <label for="message">Comment</label>
+        <textarea id="message" name="message"></textarea>
+      </div>
+      <input type="button" onclick="post_comment();" value="Submit!">
+    </form>
+
+    <h2><span id="public_list_count"></span> Broadcast Messages</h2>
+    <div id="public_list">
+    </div>
+
+    <h2><span id="private_list_count"></span> Private Messages</h2>
+    <div id="private_list">
+    </div>
+	</body>
+</html>
