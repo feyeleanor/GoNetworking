@@ -8,8 +8,8 @@ func main() {
 	http.Handle("/hello", websocket.Handler(func(ws *websocket.Conn) {
 		websocket.JSON.Send(ws, "Hello")
 	}))
-	ServeFile("/", "ws_hello.html", "text/html")
-	ServeFile("/js", "ws_hello.js", "application/javascript")
+	ServeFile("/", "23.html", "text/html")
+	ServeFile("/js", "23.js", "application/javascript")
 	http.ListenAndServe(":3000", nil)
 }
 
