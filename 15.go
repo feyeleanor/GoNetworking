@@ -1,22 +1,30 @@
 package main
+import "bufio"
+import "crypto/tls"
+import "fmt"
 import "net"
-
+ 
 func main() {
-  HELLO_WORLD := []byte("Hello World\n")
-  Listen(":1024", func(c *net.UDPConn, a *net.UDPAddr, b []byte) {
-    c.WriteToUDP(HELLO_WORLD, a)
-  })
+	Dial(":1025", ConfigTLS("ccert", "ckey"), func(c net.Conn) {
+		if m, e := bufio.NewReader(c).ReadString('\n'); e == nil {
+			fmt.Printf(m)
+		}
+	})
 }
 
-func Listen(a string, f func(*net.UDPConn, *net.UDPAddr, []byte)) {
-  if address, e := net.ResolveUDPAddr("udp", a); e == nil {
-    if conn, e := net.ListenUDP("udp", address); e == nil {
-      for b := make([]byte, 1024); ; b = make([]byte, 1024) {
-        if n, client, e := conn.ReadFromUDP(b); e == nil {
-          go f(conn, client, b[:n])
-        }
-      }
-    }
-  }
-  return
+func ConfigTLS(c, k string) (r *tls.Config) {
+	if cert, e := tls.LoadX509KeyPair(c, k); e == nil {
+		r = &tls.Config{
+			Certificates: []tls.Certificate{ cert },
+			InsecureSkipVerify: true,
+		}
+	}
+	return
+}
+
+func Dial(a string, conf *tls.Config, f func(net.Conn)) {
+	if c, e := tls.Dial("tcp", a, conf); e == nil {
+		defer c.Close()
+		f(c)
+	}
 }

@@ -1,22 +1,33 @@
 package main
-import . "fmt"
-import . "net/http"
-import "sync"
+import "fmt"
+import "net/http"
 
 func main() {
-  HandleFunc("/hello", func(w ResponseWriter, r *Request) {})
+	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintf(w, "hello world")
+	})
 
-  var servers sync.WaitGroup
-  servers.Add(1)
-  go func() {
-    defer servers.Done()
-    ListenAndServe(":1024", nil)
-  }()
+	Spawn(
+		func() {
+			http.ListenAndServe(":1024", nil)
+		},
+		func() {
+			http.ListenAndServeTLS(":1025", "cert.pem", "key.pem", nil)
+		},
+	)
+}
 
-  servers.Add(1)
-  go func() {
-    defer servers.Done()
-    ListenAndServeTLS(":1025", "cert.pem", "key.pem", nil)
-  }()
-  servers.Wait()
+func Spawn(f ...func()) {
+	done := make(chan bool)
+	for _, s := range f {
+		go func(server func()) {
+			server()
+			done <- true
+		}(s)
+	}
+
+	for range f {
+		<- done
+	}
 }

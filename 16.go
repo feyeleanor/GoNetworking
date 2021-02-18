@@ -1,23 +1,22 @@
 package main
-import "bufio"
-import . "fmt"
 import "net"
 
 func main() {
-  Dial(":1024", func(conn net.Conn) {
-    if _, e := conn.Write([]byte("\n")); e == nil {
-      if m, e := bufio.NewReader(conn).ReadString('\n'); e == nil {
-        Printf("%v", m)
-      }
-    }
-  })
+	HELLO_WORLD := []byte("Hello World\n")
+	Listen(":1024", func(c *net.UDPConn, a *net.UDPAddr, b []byte) {
+		c.WriteToUDP(HELLO_WORLD, a)
+	})
 }
 
-func Dial(a string, f func(net.Conn)) {
-  if address, e := net.ResolveUDPAddr("udp", a); e == nil {
-    if conn, e := net.DialUDP("udp", nil, address); e == nil {
-      defer conn.Close()
-      f(conn)
-    }
-  }
+func Listen(a string, f func(*net.UDPConn, *net.UDPAddr, []byte)) {
+	if address, e := net.ResolveUDPAddr("udp", a); e == nil {
+		if conn, e := net.ListenUDP("udp", address); e == nil {
+			for b := make([]byte, 1024); ; b = make([]byte, 1024) {
+				if n, client, e := conn.ReadFromUDP(b); e == nil {
+					go f(conn, client, b[:n])
+				}
+			}
+		}
+	}
+	return
 }

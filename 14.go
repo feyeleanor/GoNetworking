@@ -1,30 +1,34 @@
 package main
-import "bufio"
+import "crypto/rand"
 import "crypto/tls"
-import . "fmt"
+import "fmt"
 import "net"
- 
+
 func main() {
-  Dial(":1025", ConfigTLS("ccert", "ckey"), func(c net.Conn) {
-    if m, e := bufio.NewReader(c).ReadString('\n'); e == nil {
-      Printf(m)
-    }
-  })
+	Listen(":1025", ConfigTLS("scert", "skey"), func(c net.Conn) {
+		fmt.Fprintln(c, "hello world")
+	})
 }
 
 func ConfigTLS(c, k string) (r *tls.Config) {
-  if cert, e := tls.LoadX509KeyPair(c, k); e == nil {
-    r = &tls.Config{
-      Certificates: []tls.Certificate{ cert },
-      InsecureSkipVerify: true,
-    }
-  }
-  return
+	if cert, e := tls.LoadX509KeyPair(c, k); e == nil {
+		r = &tls.Config{
+			Certificates: []tls.Certificate{ cert },
+			Rand: rand.Reader,
+		}
+	}
+	return
 }
 
-func Dial(a string, conf *tls.Config, f func(net.Conn)) {
-  if c, e := tls.Dial("tcp", a, conf); e == nil {
-    defer c.Close()
-    f(c)
-  }
+func Listen(a string, conf *tls.Config, f func(net.Conn)) {
+	if listener, e := tls.Listen("tcp", a, conf); e == nil {
+		for {
+			if connection, e := listener.Accept(); e == nil {
+				go func(c net.Conn) {
+					defer c.Close()
+					f(c)
+				}(connection)
+			}
+		}
+	}
 }

@@ -1,13 +1,22 @@
 package main
-import "bufio"
-import . "fmt"
+import "fmt"
 import "net"
 
 func main() {
-  if c, e := net.Dial("tcp", ":1024"); e == nil {
-    defer c.Close()
-    if m, e := bufio.NewReader(c).ReadString('\n'); e == nil {
-      Printf(m)
-    }
-  }
+	Listen("tcp", ":1024", func(c net.Conn) {
+		defer c.Close()
+		fmt.Fprintln(c, "hello world")
+	})
+}
+
+func Listen(p, a string, f func(net.Conn)) (e error) {
+	var listener net.Listener
+	if listener, e = net.Listen(p, a); e == nil {
+		for {
+			if connection, e := listener.Accept(); e == nil {
+				go f(connection)
+			}
+		}
+	}
+	return
 }

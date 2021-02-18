@@ -1,16 +1,14 @@
 package main
-import (
-  . "fmt"
-  . "net/http"
-)
+import "fmt"
+import "net/http"
 
 const ADDRESS = ":1025"
 
 func main() {
-  message := "hello world"
-  HandleFunc("/hello", func(w ResponseWriter, r *Request) {
-    w.Header().Set("Content-Type", "text/plain")
-    Fprintf(w, message)
-  })
-  ListenAndServeTLS(ADDRESS, "cert.pem", "key.pem", nil)
+	message := "hello world"
+	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintf(w, message)
+	})
+	http.ListenAndServeTLS(ADDRESS, "cert.pem", "key.pem", nil)
 }
